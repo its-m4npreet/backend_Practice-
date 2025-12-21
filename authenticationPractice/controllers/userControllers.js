@@ -16,6 +16,7 @@ const signup = async (req, res)=>{
         })
         newUser.save();
         console.log("user account created successfully");
+        console.log("new user details");
         console.log(newUser);
         res.status(200).json({
             name:newUser.name,
@@ -46,7 +47,7 @@ const login = async (req,res)=>{
                 name :user.name, 
             },
                 process.env.jwt_secret,
-                {expiresIn:'1h'}
+                {expiresIn:'5h'}
             );
             if(err){
                 console.log("invalid password");
@@ -54,6 +55,7 @@ const login = async (req,res)=>{
             }
             if(result){
                 res.status(200).json({
+                    token:token,
             name:user.name,
             email:user.email
         })

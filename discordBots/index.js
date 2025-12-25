@@ -25,4 +25,4 @@ client.on('messageCreate', (message) => {
 });
 
 // <<<--- ADD YOUR TOKEN HERE (replace the text inside the quotes)
-client.login(process.env.token);
+client.login(process.env.token );

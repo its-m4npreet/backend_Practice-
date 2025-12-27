@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>chatApp</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        #chat-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
+        #messages {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 20px 0;
+            height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+        #messages li {
+            padding: 12px 15px;
+            margin: 8px;
+            background: #e3f2fd;
+            border-radius: 18px;
+            max-width: 80%;
+            align-self: flex-start;
+            word-wrap: break-word;
+        }
+        #messages li.own {
+            background: #c8e6c9;
+            align-self: flex-end;
+            margin-left: auto;
+        }
+        #input-area {
+            display: flex;
+            gap: 10px;
+        }
+        #messageInput {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 25px;
+            font-size: 16px;
+        }
+        #sendButton {
+            padding: 12px 24px;
+            background: #1976d2;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        #sendButton:hover {
+            background: #1565c0;
+        }
+    </style>
+</head>
+<body>
+    <div id="chat-container">
+        <h1>Welcome to chatApp</h1>
+        <ul id="messages"></ul>
+        
+        <div id="input-area">
+            <input type="text" id="messageInput" placeholder="Type your message here..." autocomplete="off">
+            <button id="sendButton">Send</button>
+        </div>
+    </div>
+
+    <!-- Socket.IO client script (automatically served by the server) -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
+        const messagesList = document.getElementById('messages');
+
+        // Function to add a message to the chat
+        function addMessage(text, isOwn = false) {
+            const li = document.createElement('li');
+            li.textContent = text;
+            if (isOwn) {
+                li.classList.add('own');
+            }
+            messagesList.appendChild(li);
+            messagesList.scrollTop = messagesList.scrollHeight; // Auto-scroll to bottom
+        }
+
+        // Send message when clicking the button
+        sendButton.addEventListener('click', sendMessage);
+
+        // Send message when pressing Enter
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        function sendMessage() {
+            const message = messageInput.value.trim();
+            if (message) {
+                // Send to server
+                socket.emit('send_message', {
+                    message: message,
+                    id: socket.id.substring(0, 6)  // Short ID for display
+                });
+
+                // Immediately show our own message (optimistic UI)
+                addMessage(`You: ${message}`, true);
+
+                messageInput.value = '';
+            }
+        }
+
+        // Receive messages from others
+        socket.on('receive_message', (data) => {
+            addMessage(`${data.id}: ${data.message}`);
+        });
+
+        // Optional: notify when connected
+        socket.on('connect', () => {
+            addMessage('You connected to the chat!', true);
+        });
+    </script>
+</body>
+</html>
